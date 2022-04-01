@@ -1,8 +1,10 @@
-const moviesMocks = require("./mocks/moviesMocks");
-
 const express = require("express");
 
+const moviesMocks = require("./mocks/moviesMocks");
+const router = require('./network/routes');
+
 const app = express();
+router(app);
 
 app.get("/", (req, res) => {
   res.status(200).send("home");
