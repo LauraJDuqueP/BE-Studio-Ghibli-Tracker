@@ -1,35 +1,68 @@
-const store = require('./store');
+const axios = require("axios");
+const store = require("./store");
 
-function listMovies() {
-    //
-}
-
-function addMessage (user, message) {
-    return new Promise((resolve, reject) => {
-        if(!user || !message) {
-            console.error('[movie controller] No hay usuario o mensaje');
-            return reject("Los datos son incorrectos");
-            return false;
-        }
-        
-        const fullMessage = {
-            user: user,
-            message: message,
-            date: new Date(),
-        };
-        store.add(fullMessage);
-        resolve(fullMessage);
+/**
+ * @name Bone
+ * @description: Function to get the movie details
+ * @param null
+ * @returns null
+ *
+ */
+async function addMovie() {
+  let response = null;
+  try {
+    response = await axios.get(process.env.GHIBLI_ENDPOINT);
+  } catch (e) {
+    console.log(e);
+  }
+  const moviesList = response.data;
+  const formatedMovies = [];
+  moviesList.forEach((movie) => {
+    formatedMovies.push({
+      releaseDate: movie.release_date,
+      title: movie.title,
+      originalTitle: movie.original_title,
+      director: movie.director,
+      originalTitleRomanised: movie.original_title_romanised,
+      producer: movie.producer,
+      duration: movie.running_time,
+      movieBanner: movie.movie_banner,
+      image: movie.image,
+      description: movie.description,
+      rtScore: movie.rt_score,
     });
+  });
+  if (formatedMovies.length) {
+    try {
+      await store.insertMany(formatedMovies);
+      console.log("Movies added successfully");
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }
 
+function getMovies() {
+  return new Promise(async (resolve, reject) => {
+    const moviesList = await store.get();
+    resolve(moviesList);
+  });
+}
 
-function getMessages () {
-    return new Promise((resolve, reject) => {
-        resolve(store.list());
-    })
+function updateMovie(id, tittle) {
+  return new Promise(async (resolve, reject) => {
+    if (!id || !tittle) {
+      reject("Invalid Data");
+      return false;
+    }
+
+    const result = await store.update(id, tittle);
+    resolve(result);
+  });
 }
 
 module.exports = {
-    addMessage,
-    getMessages,
+  addMovie,
+  getMovies,
+  updateMovie,
 };
